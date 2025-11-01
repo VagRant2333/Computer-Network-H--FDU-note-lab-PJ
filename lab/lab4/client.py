@@ -19,7 +19,7 @@ def getPacket(data: bytes):
         return 0, 0, 0, b"", 0.0
     header = data[: pacSep].decode("utf-8")
     payload = data[pacSep + len(sep): ]
-    headerSep: list = header.split("\n")
+    headerSep: list = header.split("|")
     if len(headerSep) != 5:
         return 0, 0, 0, b"", 0
     seq = int(headerSep[0])
@@ -167,11 +167,15 @@ class GBNsender:
         self.cc = cc
         self.pktSize = pktSize
         self.maxWin = maxWin
+        self.timerLock = threading.Lock()
     
 
     def ackListener(self):
         while True:
-            data, addr = self.socket.recvfrom(4096)
+            try:
+                data, addr = self.socket.recvfrom(4096)
+            except socket.timeout:
+                continue
             seq, flag, ackNum, payload, ts = getPacket(data)
             if flag & (1 << 0):
                 if ackNum > self.base:
@@ -181,10 +185,11 @@ class GBNsender:
                     else:
                         rtt = None
                     self.cwnd = self.cc.ifACK(ackNum, self.cwnd, rtt)
-                    if self.base != self.nextIdx:
-                        self.timerStart = time.time()
-                    else:
-                        self.timerStart = None
+                    with self.timerLock:
+                        if self.base != self.nextIdx:
+                            self.timerStart = time.time()
+                        else:
+                            self.timerStart = None
                     self.dupACK = 0
                 else:
                     self.dupACK += 1
@@ -195,6 +200,7 @@ class GBNsender:
                 return
 
     def send(self):
+        self.socket.settimeout(None)
         self.chunks: list = []
         with open(self.inPath, "rb") as f:
             while True:
@@ -202,7 +208,11 @@ class GBNsender:
                 if not chunk:
                     break
                 self.chunks.append(chunk)
-        
+
+        unique_payload = sum(len(c) for c in self.chunks)
+        total_sent = 0
+        t0 = None
+
         self.npkt = len(self.chunks)
         self.base = 0
         self.nextIdx = 0
@@ -219,23 +229,53 @@ class GBNsender:
             while self.nextIdx < min(self.npkt, self.base + window):
                 pkt = genPacket(self.nextIdx, 0, 0, self.chunks[self.nextIdx], time.time())
                 self.socket.sendto(pkt, self.addr)
+
+                if t0 is None:
+                    t0 = time.time()
+                total_sent += len(self.chunks[self.nextIdx])
+
                 if self.base == self.nextIdx:
                     self.timerStart = time.time()
                 self.nextIdx += 1
-            if self.timerStart and (time.time() - self.timerStart) > self.timeout:
+            
+            with self.timerLock:
+                tstart = self.timerStart
+            if (tstart is not None) and ((time.time() - tstart) > self.timeout):
                 self.cwnd = self.cc.ifTimeout(self.cwnd)
                 for p in range(self.base, min(self.nextIdx, self.base + window)):
                     pkt = genPacket(p, 0, 0, self.chunks[p], time.time())
                     self.socket.sendto(pkt, self.addr)
-                self.timerStart = time.time()
+
+                    total_sent += len(self.chunks[p])
+                with self.timerLock:
+                    self.timerStart = time.time()
 
         fin = genPacket(self.npkt, (1 << 1), 0, "".encode("utf-8"), time.time())
         self.socket.sendto(fin, self.addr)
+        # while True:
+        #     data, addr = self.socket.recvfrom(4096)
+        #     seq, flag, ackNum, payload, ts = getPacket(data)
+        #     if ackNum >= self.npkt and flag & (1 << 0):
+        #         break
+        self.socket.settimeout(2.0)
         while True:
-            data, addr = self.socket.recvfrom(4096)
+            try:
+                data, addr = self.socket.recvfrom(4096)
+            except socket.timeout:
+                if self.base >= self.npkt:
+                    break
+                else:
+                    continue
             seq, flag, ackNum, payload, ts = getPacket(data)
-            if flag >= self.npkt and flag & (1 << 0):
+            if (flag & (1 << 0)) and ackNum >= self.npkt:
                 break
+        
+        if t0 is None:
+            t0 = time.time()
+        dt = max(1e-9, time.time() - t0)
+        goodput_mbps = unique_payload * 8 / dt / 1e6
+        utilization = (unique_payload / total_sent) if total_sent > 0 else 0.0
+        print(f"METRIC,mode=gbn,goodput_mbps={goodput_mbps:.3f},utilization={utilization:.4f},seconds={dt:.3f}")
 
 
 class SRsender:
@@ -249,7 +289,10 @@ class SRsender:
     
     def ackListener(self):
         while True:
-            data, addr = self.socket.recvfrom(4046)
+            try:
+                data, addr = self.socket.recvfrom(4046)
+            except socket.timeout:
+                continue
             seq, flag, ackNum, payload, ts = getPacket(data)
             if flag & (1 << 0):
                 idx = ackNum - 1
@@ -267,6 +310,7 @@ class SRsender:
                 return
     
     def send(self):
+        self.socket.settimeout(None)
         self.chunks: list = []
         with open(self.inPath, "rb") as f:
             while True:
@@ -274,6 +318,10 @@ class SRsender:
                 if not chunk:
                     break
                 self.chunks.append(chunk)
+
+        unique_payload = sum(len(c) for c in self.chunks)
+        total_sent = 0
+        t01 = None
         
         self.npkt = len(self.chunks)
         self.base = 0
@@ -292,6 +340,11 @@ class SRsender:
             while self.nextIdx < self.npkt and self.nextIdx < self.base + window:
                 pkt = genPacket(self.nextIdx, 0, 0, self.chunks[self.nextIdx], time.time())
                 self.socket.sendto(pkt, self.addr)
+
+                if t01 is None:
+                    t01 = time.time()
+                total_sent += len(self.chunks[self.nextIdx])
+                
                 self.sent[self.nextIdx] = pkt
                 self.timers[self.nextIdx] = time.time()
                 self.nextIdx += 1
@@ -306,15 +359,38 @@ class SRsender:
                     self.cwnd = self.cc.ifTimeout(self.cwnd)
                     pkt = genPacket(idx, 0, 0, self.chunks[idx], time.time())
                     self.socket.sendto(pkt, self.addr)
+
+                    total_sent += len(self.chunks[idx])
+
                     self.timers[idx] = time.time()
             
         fin = genPacket(self.npkt, (1 << 1), 0, "".encode("utf-8"), time.time())
         self.socket.sendto(fin, self.addr)
+        # while True:
+        #     data, addr = self.socket.recvfrom(4096)
+        #     seq, flag, ackNum, payload, ts = getPacket(data)
+        #     if flag & (1 << 0) and ackNum >= self.npkt:
+        #         break
+        print("client: waiting for FIN-ACK")
+        self.socket.settimeout(2.0)
         while True:
-            data, addr = self.socket.recvfrom(4096)
+            try:
+                data, addr = self.socket.recvfrom(4096)
+            except socket.timeout:
+                if self.base >= self.npkt:
+                    break
+                else:
+                    continue
             seq, flag, ackNum, payload, ts = getPacket(data)
-            if flag & (1 << 0) and ackNum >= self.npkt:
+            if (flag & (1 << 0)) and ackNum >= self.npkt:
                 break
+        
+        if t01 is None:
+            t01 = time.time()
+        dt = max(1e-9, time.time() - t01)
+        goodput_mbps = unique_payload * 8 / dt / 1e6
+        utilization = (unique_payload / total_sent) if total_sent > 0 else 0.0
+        print(f"METRIC,mode=sr,goodput_mbps={goodput_mbps:.3f},utilization={utilization:.4f},seconds={dt:.3f}")
         
 
 def main():
@@ -367,7 +443,7 @@ def main():
         return
     dataPort = resp["dataPort"]
     socketData = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    dataPort.bind(("", 0))
+    socketData.bind(("", 0))
     serverAddr = (args.server, dataPort)
     if args.cc == "reno":
         cc = renoControl()

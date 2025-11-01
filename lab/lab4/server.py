@@ -19,7 +19,7 @@ def getPacket(data: bytes):
         return 0, 0, 0, b"", 0.0
     header = data[: pacSep].decode("utf-8")
     payload = data[pacSep + len(sep): ]
-    headerSep: list = header.split("\n")
+    headerSep: list = header.split("|")
     if len(headerSep) != 5:
         return 0, 0, 0, b"", 0
     seq = int(headerSep[0])
@@ -116,9 +116,12 @@ class receiver: # virtual class, for GBN and SR
 class GBNreceiver(receiver):
     def handle(self):
         expect = 0
+        data_peer = None
         with open(self.outPath, "wb") as f:
             while True:
                 data, addr1 = self.socket.recvfrom(65536)
+                if data_peer is None:
+                    data_peer = addr1
                 seq, flag, ack, payload, ts = getPacket(data)
                 ackFlag = 1 << 0
                 if seq == expect:
@@ -126,26 +129,29 @@ class GBNreceiver(receiver):
                         f.write(payload)
                         expect += 1
                     ackPacket = genPacket(0, ackFlag, expect, "".encode("utf-8"), time.time())
-                    self.socket.sendto(ackPacket, self.addr)
+                    self.socket.sendto(ackPacket, data_peer)
                 else:
                     ackPacket = genPacket(0, ackFlag, expect, "".encode("utf-8"), time.time())
-                    self.socket.sendto(ackPacket, self.addr)
+                    self.socket.sendto(ackPacket, data_peer)
                 if flag & (1 << 1):
                     ackPacket = genPacket(0, ackFlag, expect, "".encode("utf-8"), time.time())
-                    self.socket.sendto(ackPacket, self.addr)
+                    self.socket.sendto(ackPacket, data_peer)
                     break
 
 class SRRreveiver(receiver):
     def handle(self):
         packetBuff: dict = {}
         expect = 0
+        data_peer = None
         with open(self.outPath, "wb") as f:
             while True:
                 data, addr1 = self.socket.recvfrom(65536)
+                if data_peer is None:
+                    data_peer = addr1
                 seq, flag, ack, payload, ts = getPacket(data)
                 ackFlag = 1 << 0
                 ackPacket = genPacket(0, ackFlag, seq + 1, b"", time.time())
-                self.socket.sendto(ackPacket, self.addr)
+                self.socket.sendto(ackPacket, data_peer)
                 if seq >= expect:
                     packetBuff[seq] = payload
                     while expect in packetBuff:
@@ -156,7 +162,7 @@ class SRRreveiver(receiver):
                 
                 if flag & (1 << 1):
                     ackPacket = genPacket(0, ackFlag, expect, b"", time.time())
-                    self.socket.sendto(ackPacket, self.addr)
+                    self.socket.sendto(ackPacket, data_peer)
                     break
 
 class sender:
@@ -213,6 +219,11 @@ class GBNsender(sender):
                 if not cur:
                     break
                 self.chunks.append(cur)
+        
+        unique_payload = sum(len(c) for c in self.chunks)
+        total_sent = 0
+        t0 = None
+
         self.npkt = len(self.chunks)
         self.base = 0
         self.nextSeq = 0
@@ -230,6 +241,11 @@ class GBNsender(sender):
             while self.nextSeq < min(self.base + window, self.npkt):
                 pkt = genPacket(self.nextSeq, 0, 0, self.chunks[self.nextSeq], time.time())
                 self.socket.sendto(pkt, self.addr)
+
+                if t0 is None:
+                    t0 = time.time()
+                total_sent += len(self.chunks[self.nextSeq])
+
                 if self.base == self.nextSeq:
                     self.timerStart = time.time()
                 self.nextSeq += 1
@@ -238,6 +254,9 @@ class GBNsender(sender):
                 for p in range(self.base, min(self.nextSeq, self.base + window)): # resend base -> nexSeq-1
                     pkt = genPacket(p, 0, 0, self.chunks[p], time.time())
                     self.socket.sendto(pkt, self.addr)
+
+                    total_sent += len(self.chunks[p])
+
                 self.timerStart = time.time()
         finPkt = genPacket(self.npkt, (1 << 1), 0, "".encode("utf-8"), time.time())
         self.socket.sendto(finPkt, self.addr)
@@ -248,6 +267,12 @@ class GBNsender(sender):
             if flag & (1 << 0) and ackNum > self.npkt:
                 break
 
+        if t0 is None:
+            t0 = time.time()
+        dt = max(1e-9, time.time() - t0)
+        goodput_mbps = unique_payload * 8 / dt / 1e6
+        utilization = (unique_payload / total_sent) if total_sent > 0 else 0.0
+        print(f"METRIC,mode=gbn,goodput_mbps={goodput_mbps:.3f},utilization={utilization:.4f},seconds={dt:.3f}")
 
 class SRsender(sender):
     def ackListen(self):
@@ -277,7 +302,11 @@ class SRsender(sender):
                 if not p:
                     break
                 self.chunks.append(p)
-        
+
+        unique_payload = sum(len(c) for c in self.chunks)
+        total_sent = 0
+        t0 = None
+
         self.npkt = len(self.chunks)
         self.base = 0
         self.sent: dict = {}
@@ -296,6 +325,11 @@ class SRsender(sender):
             while nextIdx < self.npkt and nextIdx < self.base + window:
                 pkt = genPacket(nextIdx, 0, 0, self.chunks[nextIdx], time.time())
                 self.socket.sendto(pkt, self.addr)
+
+                if t0 is None:
+                    t0 = time.time()
+                total_sent += len(self.chunks[nextIdx])
+
                 self.timers[nextIdx] = time.time()
                 self.sent[nextIdx] = self.timers[nextIdx]
                 nextIdx += 1
@@ -312,6 +346,9 @@ class SRsender(sender):
                         self.cwnd = self.cc.ifTimeout(self.cwnd)
                         pkt = genPacket(idx, 0, 0, self.chunks[idx], time.time())
                         self.socket.sendto(pkt, self.addr)
+
+                        total_sent += len(self.chunks[idx])
+
                         self.timers[idx] = time.time()
         
         finalPkt = genPacket(self.npkt, (1 << 1), 0, "".encode("utf-8"), time.time())
@@ -321,6 +358,13 @@ class SRsender(sender):
             seq, flag, ackNum, payload, ts = getPacket(data)
             if flag & (1 << 0) and ackNum >= self.npkt:
                 break
+        
+        if t0 is None:
+            t0 = time.time()
+        dt = max(1e-9, time.time() - t0)
+        goodput_mbps = unique_payload * 8 / dt / 1e6
+        utilization = (unique_payload / total_sent) if total_sent > 0 else 0.0
+        print(f"METRIC,mode=sr,goodput_mbps={goodput_mbps:.3f},utilization={utilization:.4f},seconds={dt:.3f}")
 
 class FTPserver:
     def __init__(self, port: int, storage: str):
@@ -329,29 +373,36 @@ class FTPserver:
         os.makedirs(storage, exist_ok=True)
         self.socketControl = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socketControl.bind(("", port))
+        self.socketControl.settimeout(1.0)
         print(f"server is listening on {port}")
 
     def serverCycle(self):
-        while True:
-            data, addr = self.socketControl.recvfrom(2048)
-            try:
-                req = json.loads(data.decode())
-            except Exception:
-                continue
+        try:
+            while True:
+                try:
+                    data, addr = self.socketControl.recvfrom(2048)
+                except socket.timeout:
+                    continue
+                try:
+                    req = json.loads(data.decode())
+                except Exception:
+                    continue
 
-            cmd = req.get("cmd")
-            arqMode = req.get("arq")
-            ccName = req.get("cc")
-            pktSize = int(req.get("pktSize", 1024))
-            maxWin = int(req.get("maxWin", 64))
-            print(f"server: get request from {cmd} | arq mode = {arqMode} | cc = {ccName}")
-            socketData = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            socketData.bind(("", 0))# bind to 0 so udp automatically bind a port
-            dataPort = socketData.getsockname()[1]
-            resp = {"status": "ok", "dataPort": dataPort}
-            self.socketControl.sendto(json.dumps(resp).encode(), addr)
-            listener = threading.Thread(target=self.handle, args=(socketData, addr, req), daemon=True)
-            listener.start()
+                cmd = req.get("cmd")
+                arqMode = req.get("arq")
+                ccName = req.get("cc")
+                pktSize = int(req.get("pktSize", 1024))
+                maxWin = int(req.get("maxWin", 64))
+                print(f"server: get request from {cmd} | arq mode = {arqMode} | cc = {ccName}")
+                socketData = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                socketData.bind(("", 0))# bind to 0 so udp automatically bind a port
+                dataPort = socketData.getsockname()[1]
+                resp = {"status": "ok", "dataPort": dataPort}
+                self.socketControl.sendto(json.dumps(resp).encode(), addr)
+                listener = threading.Thread(target=self.handle, args=(socketData, addr, req), daemon=True)
+                listener.start()
+        except KeyboardInterrupt:
+            print("server: shutting down")
 
 
 
