@@ -3,6 +3,7 @@
 **拥塞控制 != 流量控制** congestion control vs flow control
 流量控制：发送方为了防止接收方处理不过来，自己控制发送的数量。方案：发送方在ACK包中携带buffer剩余大小
 拥塞控制：防止网络中间的每一跳出现拥塞
+
 ***
 **拥塞情况1**
 一个路由器，无限缓冲区，输入输出链路容量R
@@ -60,12 +61,12 @@ BW为带宽；即W为网络在一个 RTT 时间内能够传输的最大数据量
 2. **TCP Reno**
    tahoe的问题在于，每次windows从1重来太保守；而且水位线ssthresh一直在变动高高低低，我们希望它稳定的高
    实际上，timeout和3 duplicate ACK两者的严重程度是不同的，timeout说明连接可能彻底断了，而duplicate ACK只说明丢了一点包
-   **Reno的实现**：
-   先指数增长，摸到容量的上限，之后：
+   **Reno的实现**：**慢启动+拥塞避免+快速重传+快速恢复**
+   先指数增长，摸到容量的上限（慢启动），之后：
    如果3 duplicate ACK，cwnd=ssthresh=0.5cwnd
-   如果timeout：ssthresh=0.5cwnd，cwnd=1
+   如果timeout：ssthresh=0.5cwnd，cwnd=1 
    之后，维持线性增长即可
-   **fast revovery** 发了1234，2丢包，一直ack1，这时cwnd=4，空中的234没有ack，则会出现“活锁”，（因为TCP`发送的数据包总量，不能超过cwnd和awnd的最小值`，这时候窗口太小，没法重传，而接收方又一直dupACK）能传包，但是要在重传2等收到ACK2，这需要很久。我们需要膨胀
+   **fast revovery** 快速回复 发了1234，2丢包，一直ack1，这时cwnd=4，空中的234没有ack，则会出现“活锁”，（因为TCP`发送的数据包总量，不能超过cwnd和awnd的最小值`，这时候窗口太小，没法重传，而接收方又一直dupACK）能传包，但是要在重传2等收到ACK2，这需要很久。我们需要膨胀
    每个dupACK都代表一个数据包已成功离开管道（被接收端收到）
    因此可以：`ssthresh = max(flightsize/2, 2)`；同时重传dup ACK的包；同时$cwnd←ssthresh+n_{dup}$;现在的dup数量是3，后续若继续收到dupACK，cwnd还会继续加1
    直到non-dup ACK，则把膨胀的值放掉(deflation)，cwnd=ssthresh
@@ -118,5 +119,4 @@ Wmax: 检测到拥塞丢包时的发送速率
 用k时tcp窗口大小将达到Wmax的时间点
 如果时间比较长，那可以激进一点增加的快一点，由三次函数控制
 即：离 K 越远，W 的增幅越大；离 K 越近，W 的增幅越小
-
 
