@@ -21,12 +21,80 @@ network-control applications
 SDN controller
 数据平面的交换机（SDN交换机）：实现泛化转发
 
+SDN 控制器 (网络 OS): 
+维护网络状态信息
+通过北向API与“上面”的网络控制应用程序交互
+通过南向API与“下面”的网络交换机交互
+逻辑上集中，但是在实现上通常由于性能、可扩展性、容错性以及鲁棒性采用分布式方法
+
+之后，维护转发表，可能包括两种timer，hard timer 时间到则表项删除/ idle timer空闲时间过长则删除
+
+**OpenFlow协议**
+在控制器和交换机之间运行，采用TCP 来交换报文，可以实现加密
+
+一共有三种OpenFlow报文:
+1. 控制器 到 交换机 acket_out控制器可以将分组通过特定的交换机端口发出 
+2. 交换机 到 控制器 packet-in将分组和它的控制转交给控制器 （对于控制器而言，这是异步的）
+3. 对称、杂项的报文，包括握手etc
+
+openflow协议，不同于OpenFlow API
+api是规范了流表的格式；
+协议才是通信的protocal
+
+具体而言，交换机如果没有在流表里找到目的地，就会发送packet_in给controller，之后controller会更新所有交换机的流表
+因此，第一个包可能比较慢，它会去控制器询问。之后的包就快了，直接查找交换机本地流表
+
+交换机和控制器连接，可能走out_of_band端口，也可能直接用数据的in_band端口。
+
+**那么，控制器怎么探测网络的拓扑结构呢？**
+只需要控制器让交换机向其所有邻居发送一个特殊的、不和现在任何转发规则匹配的包
+之后，其邻居因为失配，会把这个包的前面一部分字节包装成packet-in去控制器查找
+
+**SDN控制平面和数据平面交互**
+链路变化或者故障，使用OpenFlow端口状态报文通知控制器
+SDN 控制器接收OpenFlow报文，更新链路状态信息
+控制器调用dijkstra
+Dijkstra路由算法访问控制器中的网络拓扑信息、链路状态信息，并计算新路由
+
+**SDN的挑战、未来**
+强化控制平面：可信、可靠、性能可扩展、安全的分布式系统
+未来，SDN除了转发，还可以拥塞控制...
+
+### ICMP Internet Control Message Protocol（因特网控制报文协议）
+主机和路由器用于通信网络层信息的协议，包括错误报告（不可达的主机 网络 端口 协议）和echo请求与回复(ping就是用的echo)
+ICMP处在网络层，但在IP之上:
+在IP数据报中携带ICMP消息
+ICMP 消息: 类型，编码，加上IP数据报的头8字节
 
 
+traceroute和ICMP
+
+### 网络管理 SNMP NETCONF/YANG
+autonomous systems 自治系统 需要管理
+
+**管理组件**
+包括：
+管理服务器: 应用程序，通常有网络管理者参与
+网络管理协议: 用于管理服务器对设备进行查询、配置、管理；设备用来将数据、事件通知管理服务器
+被管理的设备:具有可管理的、可配置的硬件、软件组件的设备
+数据:设备“状态”配置数据、运行数据、设备统计数据
+
+**管理方法**
+CLI (Command Line Interface) ：运营商直接发送(types, scripts) 到单个设备(e.g. vis ssh)
+
+SNMP/MIB：运营商使用 Simple Network Management Protocol (SNMP)去查询/设置设备数据
+MIB 的全称是 Management Information Base，即管理信息库，为 SNMP 操作提供统一的数据对象
+一种方法，是managing server发送request，managed device回答response，另一种方法是trap message，managed device在设备的状态变化或异常事件时主动发送
+
+NETCONF/YANG 抽象网络整体去实现多设备配置管理
+YANG:数据建模语言 
+NETCONF:YANG兼容的操作/数据在远程设备之间进行通信
 
 
-
-
-
-
+| 报文类型           | 功能描述                                                                 |
+|--------------------|--------------------------------------------------------------------------|
+| GetRequest<br>GetNextRequest<br>GetBulkRequest | 管理实体→代理：“给我数据”（包括数据实例、列表中的下一条数据、数据块） |
+| SetRequest         | 管理实体→代理：设置MIB的值                                              |
+| Response           | 代理→管理实体：返回请求对应的值，是对请求的响应                          |
+| Trap               | 代理→管理实体：通知管理实体发生的异常事件                                |
 
