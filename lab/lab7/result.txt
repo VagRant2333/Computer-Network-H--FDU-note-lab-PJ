@@ -235,7 +235,7 @@ EventSwitchLeave<dpid=11, 0 ports>
 EventSwitchLeave<dpid=16, 0 ports>
 EventSwitchLeave<dpid=9, 0 ports>
 
-RSR部分：
+RSR部分，如果尝试加上超时：
 (lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ sudo python3 parallel_traffic_generator.py
 *** Creating network
 *** Adding controller

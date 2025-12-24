@@ -42,23 +42,7 @@ class ProjectController(app_manager.RyuApp):
         self.debug_dsts = {'10.0.0.11', '10.0.0.12'}
         self.debug_printed = set()
 
-    # 重定义add_flow，FatTree的不支持timeout
-    def add_flow_timeout(self, datapath, priority, match, actions,
-                    idle_timeout=0, hard_timeout=0, flags=0, buffer_id=None):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        mod = parser.OFPFlowMod(
-            datapath=datapath,
-            buffer_id=buffer_id if buffer_id is not None else ofproto.OFP_NO_BUFFER,
-            priority=priority,
-            match=match,
-            instructions=inst,
-            idle_timeout=idle_timeout,
-            hard_timeout=hard_timeout,
-            flags=flags
-        )
-        datapath.send_msg(mod)
+
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
         ofproto = datapath.ofproto
@@ -185,8 +169,6 @@ class ProjectController(app_manager.RyuApp):
         # 在这里实现你的代码。。。。注意你选择的路径上的每一个switch都要安装流表，具体你要在这里一次性全装完，还是记忆你选择的路径，分多次装都可以。
         
         # raise NotImplementedError("请在此处补全路由逻辑，完成后注释掉这行代码。")
-        idle_to = 30
-        hard_to = 0
 
         for idx, sw in enumerate(path):
             if sw not in self.datapath_list:
@@ -223,12 +205,12 @@ class ProjectController(app_manager.RyuApp):
                 match = p.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,
                                    in_port=this_in,
                                    ipv4_src=src_ip, ipv4_dst=dst_ip)
-                self.add_flow_timeout(dp, 100, match, actions, idle_timeout=idle_to, hard_timeout=hard_to)
+                self.add_flow(dp, 100, match, actions)
             else:
                 match = p.OFPMatch(eth_type=ether_types.ETH_TYPE_ARP,
                                    in_port=this_in,
                                    arp_spa=src_ip, arp_tpa=dst_ip)
-                self.add_flow_timeout(dp, 90, match, actions, idle_timeout=idle_to, hard_timeout=hard_to)
+                self.add_flow(dp, 90, match, actions)
 
         # 第一跳 多发送packet_in
         # if len(path) == 1:
