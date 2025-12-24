@@ -42,7 +42,8 @@ class ProjectController(app_manager.RyuApp):
         # 在这里添加你需要的数据结构
         self.debug_src = '10.0.0.7'
         self.debug_dsts = {'10.0.0.11', '10.0.0.12'}
-        # self.debug_printed = set()
+        # self.last_printed_path = {}   
+        self.debug_printed = set()
 
     # 重定义add_flow，FatTree的不支持timeout
     def add_flow_timeout(self, datapath, priority, match, actions,
@@ -173,8 +174,14 @@ class ProjectController(app_manager.RyuApp):
         if not ok:
             return
 
+        # if flow_type == 'ipv4' and src_ip == self.debug_src and dst_ip in self.debug_dsts:
+        #     print(f"Path for {src_ip} -> {dst_ip}: {path}")
         if flow_type == 'ipv4' and src_ip == self.debug_src and dst_ip in self.debug_dsts:
-            print(f"Path for {src_ip} -> {dst_ip}: {path}")
+            k = (src_ip, dst_ip)
+            if k not in self.debug_printed:
+                print(f"Path for {src_ip} -> {dst_ip}: {path}")
+                self.debug_printed.add(k)
+
         
         # ---------- 在你选择的路径上安装流表 ----------
         # 在这里实现你的代码。。。。注意你选择的路径上的每一个switch都要安装流表，具体你要在这里一次性全装完，还是记忆你选择的路径，分多次装都可以。
@@ -191,10 +198,20 @@ class ProjectController(app_manager.RyuApp):
             dp = self.datapath_list[sw]
             p = dp.ofproto_parser
 
-            if idx == 0:
+            # if idx == 0:
+            #     this_in = in_port
+            # else:
+            #     prev_sw = path[idx - 1]
+            #     this_in = self.adjacency[sw][prev_sw]
+            if sw == in_dpid:
                 this_in = in_port
+            elif idx == 0:
+                # src host -> src edge
+                this_in = self.hosts[src_ip][1]
             else:
                 prev_sw = path[idx - 1]
+                if prev_sw not in self.adjacency[sw]:
+                    continue
                 this_in = self.adjacency[sw][prev_sw]
 
             if idx == len(path) - 1:
@@ -216,10 +233,22 @@ class ProjectController(app_manager.RyuApp):
                                    arp_spa=src_ip, arp_tpa=dst_ip)
                 self.add_flow_timeout(dp, 90, match, actions, idle_timeout=idle_to, hard_timeout=hard_to)
 
-        if len(path) == 1:
+        # if len(path) == 1:
+        #     first_out = self.hosts[dst_ip][1]
+        # else:
+        #     first_out = self.adjacency[in_dpid][path[1]]
+        if in_dpid in path:
+            cur_idx = path.index(in_dpid)
+        else:
+            cur_idx = 0
+
+        if cur_idx == len(path) - 1:
             first_out = self.hosts[dst_ip][1]
         else:
-            first_out = self.adjacency[in_dpid][path[1]]
+            nxt = path[cur_idx + 1]
+            if nxt not in self.adjacency[in_dpid]:
+                return
+            first_out = self.adjacency[in_dpid][nxt]
 
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:

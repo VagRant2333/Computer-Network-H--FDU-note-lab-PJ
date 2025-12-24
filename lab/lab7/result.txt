@@ -1,0 +1,428 @@
+LLR部分：
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ sudo python3 sequential_traffic_generator.py
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Adding switches:
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Adding links:
+(h1, s1) (h2, s1) (h3, s2) (h4, s2) (h5, s3) (h6, s3) (h7, s4) (h8, s4) (h9, s5) (h10, s5) (h11, s6) (h12, s6) (h13, s7) (h14, s7) (h15, s8) (h16, s8) (s9, s1) (s9, s2) (s9, s17) (s9, s18) (s10, s1) (s10, s2) (s10, s19) (s10, s20) (s11, s3) (s11, s4) (s11, s17) (s11, s18) (s12, s3) (s12, s4) (s12, s19) (s12, s20) (s13, s5) (s13, s6) (s13, s17) (s13, s18) (s14, s5) (s14, s6) (s14, s19) (s14, s20) (s15, s7) (s15, s8) (s15, s17) (s15, s18) (s16, s7) (s16, s8) (s16, s19) (s16, s20) 
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Starting controller
+c0 
+*** Starting 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 ...
+h1 h1-eth0:s1-eth1
+h2 h2-eth0:s1-eth2
+h3 h3-eth0:s2-eth1
+h4 h4-eth0:s2-eth2
+h5 h5-eth0:s3-eth1
+h6 h6-eth0:s3-eth2
+h7 h7-eth0:s4-eth1
+h8 h8-eth0:s4-eth2
+h9 h9-eth0:s5-eth1
+h10 h10-eth0:s5-eth2
+h11 h11-eth0:s6-eth1
+h12 h12-eth0:s6-eth2
+h13 h13-eth0:s7-eth1
+h14 h14-eth0:s7-eth2
+h15 h15-eth0:s8-eth1
+h16 h16-eth0:s8-eth2
+iperf servers started
+client starting
+all iperf clients started
+*** Stopping 1 controllers
+c0 
+*** Stopping 48 links
+................................................
+*** Stopping 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Stopping 16 hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Done
+
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ ryu-manager --observe-links LLR.py
+loading app LLR.py
+loading app ryu.topology.switches
+loading app ryu.controller.ofp_handler
+instantiating app LLR.py of ProjectController
+instantiating app ryu.topology.switches of Switches
+instantiating app ryu.controller.ofp_handler of OFPHandler
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+EventSwitchEnter<dpid=7, 4 ports>
+EventSwitchEnter<dpid=4, 4 ports>
+EventSwitchEnter<dpid=6, 4 ports>
+EventSwitchEnter<dpid=14, 4 ports>
+EventSwitchEnter<dpid=3, 4 ports>
+EventSwitchEnter<dpid=15, 4 ports>
+EventSwitchEnter<dpid=19, 4 ports>
+EventSwitchEnter<dpid=5, 4 ports>
+EventSwitchEnter<dpid=16, 4 ports>
+EventSwitchEnter<dpid=10, 4 ports>
+EventSwitchEnter<dpid=13, 4 ports>
+EventSwitchEnter<dpid=18, 4 ports>
+EventSwitchEnter<dpid=12, 4 ports>
+EventSwitchEnter<dpid=1, 4 ports>
+EventSwitchEnter<dpid=8, 4 ports>
+EventSwitchEnter<dpid=20, 4 ports>
+EventSwitchEnter<dpid=9, 4 ports>
+EventSwitchEnter<dpid=2, 4 ports>
+EventSwitchEnter<dpid=17, 4 ports>
+EventSwitchEnter<dpid=11, 4 ports>
+[LLR #1] Path for 10.0.0.1 -> 10.0.0.5: [1, 9, 17, 11, 3]
+[LLR #2] Path for 10.0.0.1 -> 10.0.0.6: [1, 10, 19, 12, 3]
+[LLR #3] Path for 10.0.0.2 -> 10.0.0.6: [1, 9, 17, 11, 3]
+[LLR #4] Path for 10.0.0.2 -> 10.0.0.7: [1, 10, 19, 12, 4]
+[LLR #5] Path for 10.0.0.3 -> 10.0.0.7: [2, 9, 18, 11, 4]
+[LLR #6] Path for 10.0.0.3 -> 10.0.0.8: [2, 9, 18, 11, 4]
+[LLR #7] Path for 10.0.0.4 -> 10.0.0.8: [2, 10, 20, 12, 4]
+[LLR #8] Path for 10.0.0.4 -> 10.0.0.9: [2, 10, 20, 14, 5]
+[LLR #9] Path for 10.0.0.5 -> 10.0.0.9: [3, 11, 17, 13, 5]
+[LLR #10] Path for 10.0.0.5 -> 10.0.0.10: [3, 11, 17, 13, 5]
+EventSwitchLeave<dpid=19, 0 ports>
+EventSwitchLeave<dpid=6, 0 ports>
+EventSwitchLeave<dpid=1, 0 ports>
+EventSwitchLeave<dpid=10, 0 ports>
+EventSwitchLeave<dpid=3, 0 ports>
+EventSwitchLeave<dpid=14, 0 ports>
+EventSwitchLeave<dpid=13, 0 ports>
+EventSwitchLeave<dpid=8, 0 ports>
+EventSwitchLeave<dpid=15, 0 ports>
+EventSwitchLeave<dpid=7, 0 ports>
+EventSwitchLeave<dpid=4, 0 ports>
+EventSwitchLeave<dpid=12, 0 ports>
+EventSwitchLeave<dpid=5, 0 ports>
+EventSwitchLeave<dpid=20, 0 ports>
+EventSwitchLeave<dpid=18, 0 ports>
+EventSwitchLeave<dpid=17, 0 ports>
+EventSwitchLeave<dpid=2, 0 ports>
+EventSwitchLeave<dpid=9, 0 ports>
+EventSwitchLeave<dpid=16, 0 ports>
+EventSwitchLeave<dpid=11, 0 ports>
+
+LPR部分：
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ sudo python3 parallel_traffic_generator.py
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Adding switches:
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Adding links:
+(h1, s1) (h2, s1) (h3, s2) (h4, s2) (h5, s3) (h6, s3) (h7, s4) (h8, s4) (h9, s5) (h10, s5) (h11, s6) (h12, s6) (h13, s7) (h14, s7) (h15, s8) (h16, s8) (s9, s1) (s9, s2) (s9, s17) (s9, s18) (s10, s1) (s10, s2) (s10, s19) (s10, s20) (s11, s3) (s11, s4) (s11, s17) (s11, s18) (s12, s3) (s12, s4) (s12, s19) (s12, s20) (s13, s5) (s13, s6) (s13, s17) (s13, s18) (s14, s5) (s14, s6) (s14, s19) (s14, s20) (s15, s7) (s15, s8) (s15, s17) (s15, s18) (s16, s7) (s16, s8) (s16, s19) (s16, s20) 
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Starting controller
+c0 
+*** Starting 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 ...
+h1 h1-eth0:s1-eth1
+h2 h2-eth0:s1-eth2
+h3 h3-eth0:s2-eth1
+h4 h4-eth0:s2-eth2
+h5 h5-eth0:s3-eth1
+h6 h6-eth0:s3-eth2
+h7 h7-eth0:s4-eth1
+h8 h8-eth0:s4-eth2
+h9 h9-eth0:s5-eth1
+h10 h10-eth0:s5-eth2
+h11 h11-eth0:s6-eth1
+h12 h12-eth0:s6-eth2
+h13 h13-eth0:s7-eth1
+h14 h14-eth0:s7-eth2
+h15 h15-eth0:s8-eth1
+h16 h16-eth0:s8-eth2
+iperf servers started
+iperf clients started
+*** Stopping 1 controllers
+c0 
+*** Stopping 48 links
+................................................
+*** Stopping 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Stopping 16 hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Done
+
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ ryu-manager --observe-links LPR.py
+loading app LPR.py
+loading app ryu.topology.switches
+loading app ryu.controller.ofp_handler
+instantiating app LPR.py of ProjectController
+instantiating app ryu.topology.switches of Switches
+instantiating app ryu.controller.ofp_handler of OFPHandler
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+EventSwitchEnter<dpid=10, 4 ports>
+EventSwitchEnter<dpid=1, 4 ports>
+EventSwitchEnter<dpid=19, 4 ports>
+EventSwitchEnter<dpid=6, 4 ports>
+EventSwitchEnter<dpid=7, 4 ports>
+EventSwitchEnter<dpid=5, 4 ports>
+EventSwitchEnter<dpid=4, 4 ports>
+EventSwitchEnter<dpid=20, 4 ports>
+EventSwitchEnter<dpid=8, 4 ports>
+EventSwitchEnter<dpid=3, 4 ports>
+EventSwitchEnter<dpid=15, 4 ports>
+EventSwitchEnter<dpid=14, 4 ports>
+EventSwitchEnter<dpid=18, 4 ports>
+EventSwitchEnter<dpid=12, 4 ports>
+EventSwitchEnter<dpid=13, 4 ports>
+EventSwitchEnter<dpid=17, 4 ports>
+EventSwitchEnter<dpid=11, 4 ports>
+EventSwitchEnter<dpid=2, 4 ports>
+EventSwitchEnter<dpid=16, 4 ports>
+EventSwitchEnter<dpid=9, 4 ports>
+Path for 10.0.0.7 -> 10.0.0.11: [4, 11, 17, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 17, 13, 6]
+EventSwitchLeave<dpid=19, 0 ports>
+EventSwitchLeave<dpid=6, 0 ports>
+EventSwitchLeave<dpid=1, 0 ports>
+EventSwitchLeave<dpid=10, 0 ports>
+EventSwitchLeave<dpid=3, 0 ports>
+EventSwitchLeave<dpid=14, 0 ports>
+EventSwitchLeave<dpid=8, 0 ports>
+EventSwitchLeave<dpid=15, 0 ports>
+EventSwitchLeave<dpid=13, 0 ports>
+EventSwitchLeave<dpid=7, 0 ports>
+EventSwitchLeave<dpid=4, 0 ports>
+EventSwitchLeave<dpid=20, 0 ports>
+EventSwitchLeave<dpid=5, 0 ports>
+EventSwitchLeave<dpid=12, 0 ports>
+EventSwitchLeave<dpid=18, 0 ports>
+EventSwitchLeave<dpid=17, 0 ports>
+EventSwitchLeave<dpid=2, 0 ports>
+EventSwitchLeave<dpid=11, 0 ports>
+EventSwitchLeave<dpid=16, 0 ports>
+EventSwitchLeave<dpid=9, 0 ports>
+
+RSR部分：
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ sudo python3 parallel_traffic_generator.py
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Adding switches:
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Adding links:
+(h1, s1) (h2, s1) (h3, s2) (h4, s2) (h5, s3) (h6, s3) (h7, s4) (h8, s4) (h9, s5) (h10, s5) (h11, s6) (h12, s6) (h13, s7) (h14, s7) (h15, s8) (h16, s8) (s9, s1) (s9, s2) (s9, s17) (s9, s18) (s10, s1) (s10, s2) (s10, s19) (s10, s20) (s11, s3) (s11, s4) (s11, s17) (s11, s18) (s12, s3) (s12, s4) (s12, s19) (s12, s20) (s13, s5) (s13, s6) (s13, s17) (s13, s18) (s14, s5) (s14, s6) (s14, s19) (s14, s20) (s15, s7) (s15, s8) (s15, s17) (s15, s18) (s16, s7) (s16, s8) (s16, s19) (s16, s20) 
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Starting controller
+c0 
+*** Starting 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 ...
+h1 h1-eth0:s1-eth1
+h2 h2-eth0:s1-eth2
+h3 h3-eth0:s2-eth1
+h4 h4-eth0:s2-eth2
+h5 h5-eth0:s3-eth1
+h6 h6-eth0:s3-eth2
+h7 h7-eth0:s4-eth1
+h8 h8-eth0:s4-eth2
+h9 h9-eth0:s5-eth1
+h10 h10-eth0:s5-eth2
+h11 h11-eth0:s6-eth1
+h12 h12-eth0:s6-eth2
+h13 h13-eth0:s7-eth1
+h14 h14-eth0:s7-eth2
+h15 h15-eth0:s8-eth1
+h16 h16-eth0:s8-eth2
+iperf servers started
+iperf clients started
+*** Stopping 1 controllers
+c0 
+*** Stopping 48 links
+................................................
+*** Stopping 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Stopping 16 hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Done
+
+RSR前面有非常多的Path，省略...
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 18, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 18, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 20, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 19, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 20, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 17, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 19, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 19, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 12, 20, 14, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 17, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 17, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 18, 13, 6]
+EventSwitchLeave<dpid=19, 0 ports>
+EventSwitchLeave<dpid=14, 0 ports>
+EventSwitchLeave<dpid=10, 0 ports>
+EventSwitchLeave<dpid=13, 0 ports>
+EventSwitchLeave<dpid=15, 0 ports>
+EventSwitchLeave<dpid=3, 0 ports>
+EventSwitchLeave<dpid=12, 0 ports>
+EventSwitchLeave<dpid=20, 0 ports>
+EventSwitchLeave<dpid=17, 0 ports>
+EventSwitchLeave<dpid=18, 0 ports>
+EventSwitchLeave<dpid=16, 0 ports>
+EventSwitchLeave<dpid=9, 0 ports>
+EventSwitchLeave<dpid=11, 0 ports>
+EventSwitchLeave<dpid=6, 4 ports>
+EventSwitchLeave<dpid=7, 4 ports>
+EventSwitchLeave<dpid=8, 4 ports>
+EventSwitchLeave<dpid=5, 4 ports>
+EventSwitchLeave<dpid=4, 0 ports>
+EventSwitchLeave<dpid=2, 0 ports>
+EventSwitchLeave<dpid=1, 0 ports>
+
+把RSR的代码改为和已有路径不同时才打印，得到如下结果：
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ sudo python3 parallel_traffic_generator.py
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Adding switches:
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Adding links:
+(h1, s1) (h2, s1) (h3, s2) (h4, s2) (h5, s3) (h6, s3) (h7, s4) (h8, s4) (h9, s5) (h10, s5) (h11, s6) (h12, s6) (h13, s7) (h14, s7) (h15, s8) (h16, s8) (s9, s1) (s9, s2) (s9, s17) (s9, s18) (s10, s1) (s10, s2) (s10, s19) (s10, s20) (s11, s3) (s11, s4) (s11, s17) (s11, s18) (s12, s3) (s12, s4) (s12, s19) (s12, s20) (s13, s5) (s13, s6) (s13, s17) (s13, s18) (s14, s5) (s14, s6) (s14, s19) (s14, s20) (s15, s7) (s15, s8) (s15, s17) (s15, s18) (s16, s7) (s16, s8) (s16, s19) (s16, s20) 
+*** Configuring hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Starting controller
+c0 
+*** Starting 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 ...
+h1 h1-eth0:s1-eth1
+h2 h2-eth0:s1-eth2
+h3 h3-eth0:s2-eth1
+h4 h4-eth0:s2-eth2
+h5 h5-eth0:s3-eth1
+h6 h6-eth0:s3-eth2
+h7 h7-eth0:s4-eth1
+h8 h8-eth0:s4-eth2
+h9 h9-eth0:s5-eth1
+h10 h10-eth0:s5-eth2
+h11 h11-eth0:s6-eth1
+h12 h12-eth0:s6-eth2
+h13 h13-eth0:s7-eth1
+h14 h14-eth0:s7-eth2
+h15 h15-eth0:s8-eth1
+h16 h16-eth0:s8-eth2
+iperf servers started
+iperf clients started
+*** Stopping 1 controllers
+c0 
+*** Stopping 48 links
+................................................
+*** Stopping 20 switches
+s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 
+*** Stopping 16 hosts
+h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14 h15 h16 
+*** Done
+
+(lab7) vagrant@vagrant-VMware-Virtual-Platform:~/Documents/Computer-Network-H--FDU-note-lab-PJ/lab/lab7/Lab7_codes$ ryu-manager --observe-links RSR.py
+loading app RSR.py
+loading app ryu.topology.switches
+loading app ryu.controller.ofp_handler
+instantiating app RSR.py of ProjectController
+instantiating app ryu.topology.switches of Switches
+instantiating app ryu.controller.ofp_handler of OFPHandler
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+switch_features_handler is called
+EventSwitchEnter<dpid=19, 4 ports>
+EventSwitchEnter<dpid=6, 4 ports>
+EventSwitchEnter<dpid=16, 4 ports>
+EventSwitchEnter<dpid=15, 4 ports>
+EventSwitchEnter<dpid=12, 4 ports>
+EventSwitchEnter<dpid=7, 4 ports>
+EventSwitchEnter<dpid=1, 4 ports>
+EventSwitchEnter<dpid=5, 4 ports>
+EventSwitchEnter<dpid=4, 4 ports>
+EventSwitchEnter<dpid=9, 4 ports>
+EventSwitchEnter<dpid=10, 4 ports>
+EventSwitchEnter<dpid=20, 4 ports>
+EventSwitchEnter<dpid=17, 4 ports>
+EventSwitchEnter<dpid=18, 4 ports>
+EventSwitchEnter<dpid=3, 4 ports>
+EventSwitchEnter<dpid=2, 4 ports>
+EventSwitchEnter<dpid=14, 4 ports>
+EventSwitchEnter<dpid=11, 4 ports>
+EventSwitchEnter<dpid=8, 4 ports>
+EventSwitchEnter<dpid=13, 4 ports>
+Path for 10.0.0.7 -> 10.0.0.12: [4, 11, 18, 13, 6]
+Path for 10.0.0.7 -> 10.0.0.11: [4, 12, 19, 14, 6]
+EventSwitchLeave<dpid=19, 0 ports>
+EventSwitchLeave<dpid=3, 0 ports>
+EventSwitchLeave<dpid=10, 0 ports>
+EventSwitchLeave<dpid=14, 0 ports>
+EventSwitchLeave<dpid=20, 0 ports>
+EventSwitchLeave<dpid=11, 0 ports>
+EventSwitchLeave<dpid=12, 0 ports>
+EventSwitchLeave<dpid=13, 0 ports>
+EventSwitchLeave<dpid=15, 0 ports>
+EventSwitchLeave<dpid=17, 0 ports>
+EventSwitchLeave<dpid=18, 0 ports>
+EventSwitchLeave<dpid=9, 0 ports>
+EventSwitchLeave<dpid=16, 0 ports>
+EventSwitchLeave<dpid=8, 4 ports>
+EventSwitchLeave<dpid=6, 4 ports>
+EventSwitchLeave<dpid=5, 4 ports>
+EventSwitchLeave<dpid=2, 4 ports>
+EventSwitchLeave<dpid=7, 4 ports>
+EventSwitchLeave<dpid=1, 0 ports>
+EventSwitchLeave<dpid=4, 4 ports>

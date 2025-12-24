@@ -195,10 +195,20 @@ class ProjectController(app_manager.RyuApp):
             p = dp.ofproto_parser
 
             # 第一跳 packet_in入口
-            if idx == 0:
+            # if idx == 0:
+            #     this_in = in_port
+            # else:
+            #     prev_sw = path[idx - 1]
+            #     this_in = self.adjacency[sw][prev_sw]
+            if sw == in_dpid:
                 this_in = in_port
+            elif idx == 0:
+                # src host -> src edge
+                this_in = self.hosts[src_ip][1]
             else:
                 prev_sw = path[idx - 1]
+                if prev_sw not in self.adjacency[sw]:
+                    continue
                 this_in = self.adjacency[sw][prev_sw]
 
             if idx == len(path) - 1:
@@ -221,10 +231,22 @@ class ProjectController(app_manager.RyuApp):
                 self.add_flow_timeout(dp, 90, match, actions, idle_timeout=idle_to, hard_timeout=hard_to)
 
         # 第一跳 多发送packet_in
-        if len(path) == 1:
+        # if len(path) == 1:
+        #     first_out = self.hosts[dst_ip][1]
+        # else:
+        #     first_out = self.adjacency[in_dpid][path[1]]
+        if in_dpid in path:
+            cur_idx = path.index(in_dpid)
+        else:
+            cur_idx = 0
+
+        if cur_idx == len(path) - 1:
             first_out = self.hosts[dst_ip][1]
         else:
-            first_out = self.adjacency[in_dpid][path[1]]
+            nxt = path[cur_idx + 1]
+            if nxt not in self.adjacency[in_dpid]:
+                return
+            first_out = self.adjacency[in_dpid][nxt]
 
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
